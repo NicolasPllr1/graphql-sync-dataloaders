@@ -36,7 +36,6 @@ from graphql.execution.values import get_argument_values
 from .sync_future import SyncFuture
 from .sync_dataloader import dataloader_batch_callbacks_map
 
-
 PENDING_FUTURE = object()
 
 
@@ -160,7 +159,9 @@ class DeferredExecutionContext(ExecutionContext):
                                         error = located_error(
                                             raw_error, field_nodes, path.as_list()
                                         )
-                                        self.handle_field_error(error, return_type)
+                                        self.handle_field_error(
+                                            error, return_type, path
+                                        )
                                         future.set_result(None)
 
                                 if completed.done():
@@ -173,7 +174,7 @@ class DeferredExecutionContext(ExecutionContext):
                             error = located_error(
                                 raw_error, field_nodes, path.as_list()
                             )
-                            self.handle_field_error(error, return_type)
+                            self.handle_field_error(error, return_type, path)
                             future.set_result(None)
 
                     future = SyncFuture()
@@ -192,7 +193,7 @@ class DeferredExecutionContext(ExecutionContext):
                         future.set_result(completed.result())
                     except Exception as raw_error:
                         error = located_error(raw_error, field_nodes, path.as_list())
-                        self.handle_field_error(error, return_type)
+                        self.handle_field_error(error, return_type, path)
                         future.set_result(None)
 
                 if completed.done():
@@ -205,7 +206,7 @@ class DeferredExecutionContext(ExecutionContext):
             return completed
         except Exception as raw_error:
             error = located_error(raw_error, field_nodes, path.as_list())
-            self.handle_field_error(error, return_type)
+            self.handle_field_error(error, return_type, path)
             return None
 
     def complete_list_value(  # type: ignore
@@ -288,7 +289,7 @@ class DeferredExecutionContext(ExecutionContext):
                                                     item_path.as_list(),
                                                 )
                                                 self.handle_field_error(
-                                                    error, item_type
+                                                    error, item_type, item_path
                                                 )
 
                                         completed.add_done_callback(
@@ -305,7 +306,7 @@ class DeferredExecutionContext(ExecutionContext):
                                 error = located_error(
                                     raw_error, field_nodes, item_path.as_list()
                                 )
-                                self.handle_field_error(error, item_type)
+                                self.handle_field_error(error, item_type, item_path)
                             unresolved -= 1
                             if not unresolved:
                                 future.set_result(results)
@@ -338,7 +339,7 @@ class DeferredExecutionContext(ExecutionContext):
                                 error = located_error(
                                     raw_error, field_nodes, item_path.as_list()
                                 )
-                                self.handle_field_error(error, item_type)
+                                self.handle_field_error(error, item_type, item_path)
                             unresolved -= 1
                             if not unresolved:
                                 future.set_result(results)
@@ -351,7 +352,7 @@ class DeferredExecutionContext(ExecutionContext):
                     results[index] = completed
             except Exception as raw_error:
                 error = located_error(raw_error, field_nodes, item_path.as_list())
-                self.handle_field_error(error, item_type)
+                self.handle_field_error(error, item_type, item_path)
 
         if not unresolved:
             return results

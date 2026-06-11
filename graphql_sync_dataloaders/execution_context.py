@@ -36,7 +36,6 @@ from graphql.execution.values import get_argument_values
 from .sync_future import SyncFuture
 from .sync_dataloader import dataloader_batch_callbacks_map
 
-
 PENDING_FUTURE = object()
 
 
